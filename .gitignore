@@ -43,3 +43,4 @@ bower_components/
 *.log
 build/
 dist/
+/app/.tmp/
