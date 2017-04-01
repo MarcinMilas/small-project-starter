@@ -2,14 +2,24 @@
  * Created by jarek on 01/04/2017.
  */
 
-import Test from './test';
+import jQuery from 'jquery';
+
+const $ = jQuery;
+window.jQuery = window.$ = $;
+
+//let bootstrap = require('bootstrap');
 
 class Main {
-  constructor () {
+  constructor() {
     console.log('constructor Main go!');
+    this.name = '';
+  }
+
+  setName(name) {
+    this.name = name;
+    $('#main .name').text(this.name);
   }
 }
 
 let main = new Main();
-
-let test = new Test();
+main.setName('world');

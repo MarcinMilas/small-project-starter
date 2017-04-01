@@ -5,8 +5,12 @@
 import gulp from 'gulp';
 import sass from 'gulp-sass';
 import path from 'path';
-import babel from 'gulp-babel';
 import sourcemaps from 'gulp-sourcemaps';
+import source from 'vinyl-source-stream';
+import buffer from 'vinyl-buffer';
+import browserify from 'browserify';
+import watchify from 'watchify';
+import babel from 'babelify';
 import {create as bsCreate} from 'browser-sync';
 
 const browserSync = bsCreate();
@@ -18,25 +22,37 @@ const dirs = {
 
 const sources = {
   styles: `${dirs.app}/**/*.scss`,
-  scripts: `${dirs.app}/**/*.js`,
+  scripts: `${dirs.app}/.tmp/scripts/**/*.js`,
   html: `${dirs.app}/*.html`
 };
 
-gulp.task('watch', () => {
-  gulp.watch(sources.styles, ['sass']);
-  gulp.watch(sources.scripts, browserSync.reload);
-  gulp.watch(sources.html, browserSync.reload);
+function compile(watch) {
+  var bundler = watchify(browserify(path.join(dirs.app, 'scripts', 'main.js'), { debug: true }).transform(babel));
 
-});
+  function rebundle() {
+    bundler.bundle()
+      .on('error', function(err) { console.error(err); this.emit('end'); })
+      .pipe(source('main.js'))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({ loadMaps: true }))
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest(path.join(dirs.app, '.tmp', 'scripts')));
 
-gulp.task('browser-sync', () => {
-  browserSync.init({
-    server: {
-      baseDir: dirs.app
-    }
-  });
-});
+  }
 
+  if (watch) {
+    bundler.on('update', function() {
+      console.log('-> bundling...');
+      rebundle();
+    });
+  }
+
+  rebundle();
+}
+
+function watch() {
+  return compile(true);
+}
 
 gulp.task('sass', () => {
   return gulp.src(sources.styles)
@@ -52,14 +68,23 @@ gulp.task('sass', () => {
     .pipe(browserSync.stream());
 });
 
-gulp.task('scripts', () => {
-  return gulp.src(sources.scripts)
-    .pipe(babel())
-    .pipe(gulp.dest(path.join(dirs.app, '.tmp')))
+gulp.task('browser-sync', () => {
+  browserSync.init({
+    server: {
+      baseDir: dirs.app
+    }
+  });
 });
 
+gulp.task('watch', () => {
+  gulp.watch(sources.styles, ['sass']);
+  gulp.watch(sources.scripts, browserSync.reload);
+  gulp.watch(sources.html, browserSync.reload);
+  return watch();
+});
 
+gulp.task('build', function() { return compile(); });
 
-gulp.task('serve', ['sass', 'scripts', 'browser-sync', 'watch']);
+gulp.task('serve', ['sass', 'browser-sync', 'watch']);
 
 gulp.task('default', ['serve']);
