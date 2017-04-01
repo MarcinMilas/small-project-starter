@@ -1,1 +1,12 @@
-# small-project-starter
+# Small Project Starter
+
+
+Powerful combination of Gulp, SASS (with Bourbon), ES6, jQuery, Bootstrap for small projects. This starter pack is made for quick development of small web projects.
+
+##Quick start
+
+Clone this repo then install dependencies with `npm install`.
+
+##Development server
+
+Run `npm run start` to start development server.
