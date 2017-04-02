@@ -1,7 +1,7 @@
 # Small Project Starter
 
 
-Powerful combination of Gulp, SASS (with Bourbon), ES6, jQuery, Bootstrap for small projects. This starter pack is made for quick development of small web projects.
+Powerful combination of Gulp, SASS (with Bourbon), ES6, jQuery and Bootstrap. This starter pack is made for quick development of small web projects.
 
 ## Quick start
 
