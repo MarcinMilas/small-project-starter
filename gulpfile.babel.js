@@ -4,6 +4,12 @@
 
 import gulp from 'gulp';
 import sass from 'gulp-sass';
+import useref from 'gulp-useref';
+import uglify from 'gulp-uglify';
+import gulpIf from 'gulp-if';
+import cssnano from 'gulp-cssnano';
+import imagemin from 'gulp-imagemin';
+import cache from 'gulp-cache';
 import path from 'path';
 import sourcemaps from 'gulp-sourcemaps';
 import source from 'vinyl-source-stream';
@@ -11,6 +17,7 @@ import buffer from 'vinyl-buffer';
 import browserify from 'browserify';
 import watchify from 'watchify';
 import babel from 'babelify';
+import del from 'del';
 import {create as bsCreate} from 'browser-sync';
 
 const browserSync = bsCreate();
@@ -22,6 +29,7 @@ const dirs = {
 
 const sources = {
   styles: `${dirs.app}/**/*.scss`,
+  fonts: `${dirs.app}/assets/fonts/**/*`,
   scripts: `${dirs.app}/.tmp/scripts/**/*.js`,
   html: `${dirs.app}/*.html`
 };
@@ -83,7 +91,36 @@ gulp.task('watch', () => {
   return watch();
 });
 
-gulp.task('build', function() { return compile(); });
+/*gulp.task('build', function() { return compile(); });*/
+
+gulp.task('build', ['clean', 'sass', 'useref', 'fonts', 'images'], function (){
+  console.log('Building files');
+});
+
+gulp.task('clean', function() {
+  return del.sync(dirs.dist);
+});
+
+gulp.task('useref', function(){
+  return gulp.src('app/*.html')
+    .pipe(useref())
+    .pipe(gulpIf('*.js', uglify()))
+    .pipe(gulpIf('*.css', cssnano()))
+    .pipe(gulp.dest(dirs.dist))
+});
+
+gulp.task('images', function(){
+  return gulp.src(path.join(dirs.app, 'assets', 'images/**/*.+(png|jpg|gif|svg)'))
+    .pipe(cache(imagemin({
+      interlaced: true
+    })))
+    .pipe(gulp.dest(path.join(dirs.dist, 'assets', 'images')))
+});
+
+gulp.task('fonts', function() {
+  return gulp.src(sources.fonts)
+    .pipe(gulp.dest(path.join(dirs.dist, 'assets', 'fonts')))
+});
 
 gulp.task('serve', ['sass', 'browser-sync', 'watch']);
 
